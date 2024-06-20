@@ -1,0 +1,24 @@
+# Игнорирование виртуальной среды Python
+venv/
+.venv/
+
+
+# Игнорирование файлов с окружением
+.env
+
+# Игнорирование скомпилированных файлов Python
+__pycache__/
+**/__pycache__/
+
+# Игнорирование настроек проекта для PyCharm
+.idea/
+**/.idea/
+
+
+new_class.py
+config.py
+
+
+dist/
+asyncpg_lite.egg-info/
+build/
