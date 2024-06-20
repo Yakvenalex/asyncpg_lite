@@ -172,7 +172,7 @@ class DatabaseManager:
 
         # Building a query
         if columns:
-            stmt = select([table.c[col] for col in columns])
+            stmt = select(*[table.c[col] for col in columns])
         else:
             stmt = select(table)
 
