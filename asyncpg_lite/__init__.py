@@ -1,10 +1,10 @@
 import logging
 import re
 from typing import Optional, Union, Dict, List
-from sqlalchemy import MetaData, Table, Column, select, update, delete
+from sqlalchemy import MetaData, Table, Column, select, update, delete, Index
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.sql import and_, or_
+from sqlalchemy.sql import and_, or_, func
 from sqlalchemy.dialects.postgresql import insert
 import urllib.parse
 
@@ -44,7 +44,6 @@ class DatabaseManager:
         self.logger.addHandler(handler)
         self.logger.setLevel(log_level)
         self.logger.info("Database instance created with log level: %s", logging.getLevelName(log_level))
-
 
     async def __aenter__(self):
         await self.connect()
@@ -120,16 +119,53 @@ class DatabaseManager:
         ])
         """
 
-        # Converting column descriptions to Column objects
         column_objects = []
+        indexes = []
+
         for col in columns:
-            column_objects.append(Column(col['name'], col['type'], **col.get('options', {})))
+            col_name = col['name']
+            col_type = col['type']
+            options = col.get('options', {})
+
+            primary_key = options.get('primary_key', False)
+            nullable = options.get('nullable', True)
+            default = options.get('default', None)
+            onupdate = options.get('onupdate', None)
+            unique = options.get('unique', False)
+            autoincrement = options.get('autoincrement', None)
+            index = options.get('index', False)
+
+            # Using server_default for default values
+            server_default = None
+            if default is not None:
+                if isinstance(default, str):
+                    server_default = func.text(default)
+                else:
+                    server_default = func.text(str(default))
+
+            # Explicitly set column options
+            column = Column(
+                col_name,
+                col_type,
+                primary_key=primary_key,
+                nullable=nullable,
+                server_default=server_default,
+                onupdate=onupdate,
+                unique=unique,
+                autoincrement=autoincrement
+            )
+            column_objects.append(column)
+
+            # Add indexes
+            if index:
+                indexes.append(Index(f'ix_{table_name}_{col_name}', column))
 
         # Creating a table in the database
-        Table(table_name, self.metadata, *column_objects)
+        table = Table(table_name, self.metadata, *column_objects, *indexes)
 
         async with self.engine.begin() as conn:
             await conn.run_sync(self.metadata.create_all)
+
         self.logger.info("Table '%s' created with columns: %s", table_name, [col['name'] for col in columns])
 
     async def get_table(self, table_name: str) -> Table:
