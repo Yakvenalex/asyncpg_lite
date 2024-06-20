@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setup(
     name='asyncpg_lite',
-    version='0.3.1.1',
+    version='0.3.1.2',
     packages=find_packages(),
     install_requires=[
         'SQLAlchemy>=2.0.31',

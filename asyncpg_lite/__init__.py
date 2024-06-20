@@ -45,10 +45,6 @@ class DatabaseManager:
         self.logger.setLevel(log_level)
         self.logger.info("Database instance created with log level: %s", logging.getLevelName(log_level))
 
-    @staticmethod
-    def validate_name(name: str) -> None:
-        if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', name):
-            raise ValueError(f"Invalid name: {name}")
 
     async def __aenter__(self):
         await self.connect()
@@ -123,13 +119,10 @@ class DatabaseManager:
             {"name": "email", "type": String, "options": {"unique": True}},
         ])
         """
-        # Validation of the table name
-        self.validate_name(table_name)
 
         # Converting column descriptions to Column objects
         column_objects = []
         for col in columns:
-            self.validate_name(col['name'])
             column_objects.append(Column(col['name'], col['type'], **col.get('options', {})))
 
         # Creating a table in the database
@@ -146,9 +139,6 @@ class DatabaseManager:
         :param table_name: Name of the table.
         :return: Table object.
         """
-        # Validation of the table name
-        self.validate_name(table_name)
-
         # Getting a table from metadata
         async with self.engine.connect() as conn:
             await conn.run_sync(self.metadata.reflect)
@@ -319,9 +309,6 @@ class DatabaseManager:
             self.logger.warning(f"Wrong password! Drop table {table_name} cancel.")
             return
 
-        # Validate table name
-        self.validate_name(table_name)
-
         # Retrieve the table from metadata
         table = await self.get_table(table_name)
 
@@ -340,8 +327,6 @@ class DatabaseManager:
         if password != self.deletion_password:
             self.logger.warning("Wrong password! Delete data cancel.")
             return
-        # Validate table name
-        self.validate_name(table_name)
 
         # Retrieve the table from metadata
         table = await self.get_table(table_name)
