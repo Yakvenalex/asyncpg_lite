@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Optional, Union, Dict, List
+from typing import Optional, Union, Dict, List, Any
 from sqlalchemy import MetaData, Table, Column, select, update, delete, Index
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
@@ -90,7 +90,7 @@ class DatabaseManager:
             await self.engine.dispose()
         self.logger.info("Disconnected from the database.")
 
-    async def create_table(self, table_name: str, columns: List[Dict[str, ...]]) -> None:
+    async def create_table(self, table_name: str, columns: List[Dict[str, Any]]) -> None:
         """Creates a table in the database.
 
         :param table_name: Name of the table.
