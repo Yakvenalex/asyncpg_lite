@@ -1,7 +1,7 @@
 import logging
 import re
 from typing import Optional, Union, Dict, List
-from sqlalchemy import MetaData, Table, Column, select, update, delete, Index
+from sqlalchemy import MetaData, Table, Column, select, update, delete, Index, DefaultClause
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import and_, or_, func
@@ -140,6 +140,8 @@ class DatabaseManager:
             if default is not None:
                 if isinstance(default, str):
                     server_default = func.text(default)
+                elif isinstance(default, int):
+                    server_default = DefaultClause(str(default))
                 else:
                     server_default = func.text(str(default))
 
